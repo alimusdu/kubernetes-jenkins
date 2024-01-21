@@ -6,7 +6,13 @@
 def pipeline = new io.estrado.Pipeline()
 
 podTemplate(label: 'jenkins-pipeline', containers: [
-    containerTemplate(name: 'jnlp', image: 'jenkins/inbound-agent', args: '${computer.jnlpmac} ${computer.name}'),
+    ontainerTemplate(name: 'jnlp',
+                        image: 'jenkins/inbound-agent:4.13-2-alpine',
+                        runAsUser: '0',
+                        resourceRequestCpu: '1',
+                        resourceLimitCpu: '1',
+                        resourceRequestMemory: '1Gi',
+                        resourceLimitMemory: '1Gi'),
     containerTemplate(name: 'docker', image: 'docker:25.0.0-cli', command: 'cat', ttyEnabled: true),
     containerTemplate(name: 'maven', image: 'maven:3.9.6', command: 'cat', ttyEnabled: true),
 ],
