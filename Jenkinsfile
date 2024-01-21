@@ -9,8 +9,6 @@ podTemplate(label: 'jenkins-pipeline', containers: [
     containerTemplate(name: 'jnlp', image: 'jenkins/inbound-agent', args: '${computer.jnlpmac} ${computer.name}'),
     containerTemplate(name: 'docker', image: 'docker:25.0.0-cli', command: 'cat', ttyEnabled: true),
     containerTemplate(name: 'maven', image: 'maven:3.9.6', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:v2.6.1', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.8.3', command: 'cat', ttyEnabled: true)
 ],
 volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
@@ -42,31 +40,6 @@ volumes:[
       }
 
     }
-
-    // Test Helm deployment (dry-run)
-    stage ('Helm test deployment') {
-
-      container('helm') {
-
-        // run helm chart linter
-        pipeline.helmLint(chart_dir)
-
-        // run dry-run helm chart installation
-        pipeline.helmDeploy(
-          dry_run       : true,
-          name          : "hello-java",
-          namespace     : "hello-java",
-          version_tag   : tags.get(0),
-          chart_dir     : chart_dir,
-          replicas      : 2,
-          cpu           : "10m",
-          memory        : "128Mi",
-          hostname      : app_hostname
-        )
-
-      }
-    }
-
     // Build and push the Docker image
     stage ('Build & Push Docker image') {
 
@@ -89,24 +62,5 @@ volumes:[
         )
       }
     }
-    
-    // Deploy the new version to Kubernetes
-    stage ('Deploy to Kubernetes') {
-        container('helm') {
-
-          // Deploy using Helm chart
-           pipeline.helmDeploy(
-            dry_run       : false,
-            name          : "hello-java",
-            namespace     : "hello-java",
-            version_tag   : tags.get(0),
-            chart_dir     : chart_dir,
-            replicas      : 2,
-            cpu           : "10m",
-            memory        : "128Mi",
-            hostname      : app_hostname
-          )
-        }
-      }
   }
 }
